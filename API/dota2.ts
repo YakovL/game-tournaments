@@ -43,9 +43,7 @@ export default class Dota {
             if(resp.status !== 200) {
                 throw Error("Request failed: " + resp.status)
             }
-            const data = resp.data.result
-        
-            return data as {
+            const data = resp.data.result as {
                 status: number,
                 num_results: number,
                 total_results: number,
@@ -66,6 +64,8 @@ export default class Dota {
                     }[]
                 }[]
             }
+        
+            return data?.matches?.length ? data.matches.map(match => match.match_id) : []
         } else {
             throw Error("Only steam version is implemented")
         }

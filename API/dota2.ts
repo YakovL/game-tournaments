@@ -20,6 +20,14 @@ export class SteamID {
     }
 }
 
+interface PlayerParticipationDetails {
+    account_id?: number, // SteamID32, is specified only for the requested player
+    player_slot: number,
+    team_number: 0 | 1,
+    team_slot: number,
+    hero_id: number
+}
+
 export default class Dota {
     steamKey?: string;
     openDotaKey?: string;
@@ -40,7 +48,12 @@ export default class Dota {
     // all methods to get player id by name seem to be broken,
     // so no method for this
 
-    async getPlayerLastMatchesIds(playerSteamID: SteamID) {
+    async getPlayerLastMatchesMeta(playerSteamID: SteamID): Promise<(
+        PlayerParticipationDetails & {
+            match_id: number,
+            start_time: number, // timestamp in seconds
+        }
+    )[]> {
         if(this.steamKey) {
             const query = `?key=${this.steamKey}&server_steam_id=${playerSteamID.SteamID64String}`
             const url = `${this.baseUrl}/IDOTA2Match_570/GetMatchHistory/v001/${query}`
@@ -60,17 +73,25 @@ export default class Dota {
                     lobby_type: number, // enum
                     radiant_team_id: number,
                     dire_team_id: number,
-                    players: {
-                        account_id?: number, // SteamID32, is specified only for the requested player
-                        player_slot: number,
-                        team_number: 0 | 1,
-                        team_slot: number,
-                        hero_id: number
-                    }[]
+                    players: PlayerParticipationDetails[]
                 }[]
             }
-        
-            return data?.matches?.length ? data.matches.map(match => match.match_id) : []
+
+            const playerSteamID32 = playerSteamID.SteamID32
+            return data?.matches?.length ? data.matches.map(match => {
+                const playerParticipation = match.players.find(p => p.account_id === playerSteamID32)
+                /* match also has:
+                    "match_seq_num": 5712362446,
+                    "lobby_type": 7,
+                    "radiant_team_id": 0,
+                    "dire_team_id": 0,
+                */
+                return {
+                    match_id: match.match_id,
+                    start_time: match.start_time,
+                    ...playerParticipation
+                }
+            }) : []
         } else {
             throw Error("Only steam version is implemented")
         }

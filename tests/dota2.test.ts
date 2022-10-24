@@ -1,4 +1,6 @@
-import Dota, { SteamID } from "../API/dota2"
+import Dota, {
+    SteamID,
+} from "../API/dota2"
 import dotenv from "dotenv"
 
 dotenv.config()
@@ -23,9 +25,11 @@ beforeEach(() => {
 describe("Dota", () => {
     it("should fetch ids of last 100 matches by player id", async () => {
         const knownPlayerId = new SteamID({ SteamID64String: "76561198867994061"})
-        const result = await instance.getPlayerLastMatchesIds(knownPlayerId)
+        const result = await instance.getPlayerLastMatchesMeta(knownPlayerId)
 
         expect(result.length).toBe(100)
         expect(result[0]).toBeTruthy()
+        expect(result[0].match_id).toBeDefined()
+        expect(result[0].player_slot).toBeDefined()
     })
 })

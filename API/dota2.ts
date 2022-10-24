@@ -2,9 +2,8 @@ import axios from 'axios'
 
 // TODO: add methods' arguments, types, implementations
 
-// Current implementation is limited to SteamID64 in form of a string (and not BigInt);
-// but it is written in an extandable manner for further support of SteamID32 (used by OpenDota and Steam API), conversions etc.
-// See more at https://developer.valvesoftware.com/wiki/SteamID and https://stackoverflow.com/q/23259260/3995261
+// SteamID has many forms (see https://developer.valvesoftware.com/wiki/SteamID),
+// this class is meant to hold the id in one form, but construct or convert from those needed for applications.
 export class SteamID {
     private SteamID64: string | undefined
 
@@ -13,6 +12,12 @@ export class SteamID {
     }
 
     get SteamID64String() { return this.SteamID64 }
+    get SteamID32() {
+        const id64 = BigInt(this.SteamID64)
+        // See https://stackoverflow.com/q/23259260/3995261
+        const conversionConstant = BigInt("76561197960265728")
+        return Number(id64 - conversionConstant)
+    }
 }
 
 export default class Dota {
